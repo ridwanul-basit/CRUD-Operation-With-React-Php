@@ -22,7 +22,7 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
       <div className="card w-full max-w-md shadow-lg p-6 bg-white rounded-lg">
         <h2 className="text-2xl font-bold text-center mb-4">Forgot Password</h2>
         <form onSubmit={handleSubmit}>

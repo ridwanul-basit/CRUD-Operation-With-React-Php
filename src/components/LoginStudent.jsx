@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
 function LoginStudent() {
@@ -42,12 +42,9 @@ function LoginStudent() {
             Student Login
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            
             {/* Email */}
             <div className="form-control">
-              <label className="label">
-                <span className="label-text pr-2">Email :</span>
-              </label>
+              <label className="label">Email:</label>
               <input
                 type="email"
                 name="email"
@@ -60,9 +57,7 @@ function LoginStudent() {
 
             {/* Password */}
             <div className="form-control">
-              <label className="label">
-                <span className="label-text pr-2">Password :</span>
-              </label>
+              <label className="label">Password:</label>
               <input
                 type="password"
                 name="password"
@@ -84,13 +79,23 @@ function LoginStudent() {
             <div className="mt-2 text-center">
               <button
                 type="button"
-                className="text-sm text-blue-500 hover:underline"
+                className="text-sm text-blue-500 hover:underline mr-2"
                 onClick={() => navigate("/student-forgot-password")}
               >
                 Forgot Password?
               </button>
             </div>
 
+            {/* Not registered? Register */}
+            <div className="mt-1 text-center">
+              <span className="text-sm">Not registered? </span>
+              <Link
+                to="/"
+                className="text-blue-500 hover:underline text-sm"
+              >
+                Register
+              </Link>
+            </div>
           </form>
         </div>
       </div>

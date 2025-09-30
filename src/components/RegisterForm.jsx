@@ -12,6 +12,8 @@ function RegisterForm() {
     university: "",
     cgpa: "",
     major: "",
+    password: "",
+    confirmPassword: ""
   });
 
   const navigate = useNavigate();
@@ -23,11 +25,24 @@ function RegisterForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (formData.password !== formData.confirmPassword) {
+      Swal.fire({
+        icon: "error",
+        title: "Password Mismatch",
+        text: "Password and Confirm Password do not match",
+        confirmButtonColor: "#dc2626",
+      });
+      return;
+    }
+
     try {
       const res = await fetch("http://localhost/college_api/insert_student.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          password: formData.confirmPassword // only send confirmPassword
+        }),
       });
 
       const result = await res.json();
@@ -50,7 +65,11 @@ function RegisterForm() {
           university: "",
           cgpa: "",
           major: "",
+          password: "",
+          confirmPassword: ""
         });
+
+        navigate("/login-student");
       } else {
         Swal.fire({
           icon: "error",
@@ -76,7 +95,7 @@ function RegisterForm() {
         <div className="card-body">
           <h2 className="text-3xl font-bold text-center text-primary mb-6">Student Registration</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Form fields */}
+            
             <div className="form-control">
               <label className="label"><span className="label-text">Name</span></label>
               <input type="text" name="name" placeholder="Enter name"
@@ -129,11 +148,23 @@ function RegisterForm() {
                 className="input input-bordered" value={formData.major} onChange={handleChange} required />
             </div>
 
+            {/* Password fields at the end */}
+            <div className="form-control">
+              <label className="label"><span className="label-text">Password</span></label>
+              <input type="password" name="password" placeholder="Enter password"
+                className="input input-bordered" value={formData.password} onChange={handleChange} required />
+            </div>
+
+            <div className="form-control">
+              <label className="label"><span className="label-text">Confirm Password</span></label>
+              <input type="password" name="confirmPassword" placeholder="Confirm password"
+                className="input input-bordered" value={formData.confirmPassword} onChange={handleChange} required />
+            </div>
+
             <div className="form-control md:col-span-2 mt-4">
               <button type="submit" className="btn btn-primary w-full">Register</button>
             </div>
 
-            {/* Already registered? Login */}
             <div className="md:col-span-2 text-center mt-2">
               <span className="text-sm">Already registered? </span>
               <Link to="/login-student" className="text-blue-500 hover:underline text-sm">Login</Link>
