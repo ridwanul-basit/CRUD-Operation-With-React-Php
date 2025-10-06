@@ -57,7 +57,7 @@ function StudentDashboard() {
             <p className="text-gray-900">{student.email}</p>
           </div>
           <div className="bg-white shadow-lg rounded-lg p-6">
-            <h3 className="font-semibold text-gray-700">Roll</h3>
+            <h3 className="font-semibold text-gray-700">Student ID</h3>
             <p className="text-gray-900">{student.roll}</p>
           </div>
           <div className="bg-white shadow-lg rounded-lg p-6">
