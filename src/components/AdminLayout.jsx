@@ -6,10 +6,11 @@ export default function AdminLayout() {
   const [adminName, setAdminName] = useState("");
   const navigate = useNavigate();
 
-  // Collapsed state for sidebar and dashboard submenu
+  // Collapsed state for sidebar and submenus
   const [collapsed, setCollapsed] = useState({
     main: false,
     dashboard: false,
+    cms: false, // <-- CMS submenu
   });
 
   // Fetch admin session info
@@ -83,7 +84,7 @@ export default function AdminLayout() {
               <button
                 className="flex items-center p-3 w-full hover:bg-gray-700 transition-colors rounded justify-between"
                 onClick={() =>
-                  setCollapsed(prev => ({ ...prev, dashboard: !prev.dashboard }))
+                  setCollapsed((prev) => ({ ...prev, dashboard: !prev.dashboard }))
                 }
               >
                 <span>{collapsed.main ? "🏠" : "Dashboard"}</span>
@@ -115,14 +116,6 @@ export default function AdminLayout() {
                   >
                     ⏳ Pending Verifications
                   </NavLink>
-                  {/* <NavLink
-                    to="/admin/dashboard/password-requests"
-                    className={({ isActive }) =>
-                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
-                    }
-                  >
-                    ⚠️ Password Reset Requests
-                  </NavLink> */}
                   <NavLink
                     to="graph"
                     className={({ isActive }) =>
@@ -130,6 +123,47 @@ export default function AdminLayout() {
                     }
                   >
                     📊 Graph
+                  </NavLink>
+                </div>
+              )}
+            </div>
+
+            {/* CMS with submenu */}
+            <div>
+              <button
+                className="flex items-center p-3 w-full hover:bg-gray-700 transition-colors rounded justify-between"
+                onClick={() =>
+                  setCollapsed((prev) => ({ ...prev, cms: !prev.cms }))
+                }
+              >
+                <span>{collapsed.main ? "📝" : "CMS"}</span>
+                <span>{collapsed.main ? "" : "▼"}</span>
+              </button>
+              {!collapsed.cms && !collapsed.main && (
+                <div className="ml-4 mt-1 flex flex-col space-y-1">
+                  <NavLink
+                    to="announcements"
+                    className={({ isActive }) =>
+                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
+                    }
+                  >
+                    📢 Announcements
+                  </NavLink>
+                  <NavLink
+                    to="documents"
+                    className={({ isActive }) =>
+                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
+                    }
+                  >
+                    📄 Documents
+                  </NavLink>
+                   <NavLink
+                    to="posts"
+                    className={({ isActive }) =>
+                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
+                    }
+                  >
+                    📄 Posts
                   </NavLink>
                 </div>
               )}

@@ -20,6 +20,9 @@ import PendingVerification from '../components/PendingVerfication';
 import Admins from '../components/Admins';
 import AdminProfile from '../components/AdminProfile';
 import Graph from '../components/Graph';
+import Announcements from '../components/Announcements';
+import Documents from '../components/Documents';
+import Posts from '../components/Posts';
 
 // Create the router
 const Router = createBrowserRouter([
@@ -36,11 +39,11 @@ const Router = createBrowserRouter([
     ),
     children: [
       {
-        path: "", // default dashboard for /adminpanel
+        path: "", // default dashboard for 
         element: <TotalStudentsCard></TotalStudentsCard>,
       },
       {
-        path: "students", // ✅ relative path
+        path: "students", //  relative path
         element: <Students />,
       },
       {
@@ -66,6 +69,18 @@ const Router = createBrowserRouter([
       {
         path: "graph", // 
         element: <Graph></Graph>,
+      },
+      {
+        path: "announcements", // 
+        element: <Announcements></Announcements>,
+      },
+      {
+        path: "documents", // 
+        element: <Documents></Documents>,
+      },
+      {
+        path: "posts", // 
+        element: <Posts></Posts>,
       },
     ],
   },
