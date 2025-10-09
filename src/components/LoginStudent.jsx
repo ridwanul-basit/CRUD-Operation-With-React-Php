@@ -24,7 +24,7 @@ function LoginStudent() {
 
       if (result.success) {
         Swal.fire("Welcome!", result.message, "success").then(() =>
-          navigate("/student-dashboard")
+          navigate("/student-layout")
         );
       } else {
         Swal.fire("Error", result.message, "error");

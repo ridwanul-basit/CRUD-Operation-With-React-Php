@@ -23,6 +23,14 @@ import Graph from '../components/Graph';
 import Announcements from '../components/Announcements';
 import Documents from '../components/Documents';
 import Posts from '../components/Posts';
+import StudentLayout from '../components/StudentLayout';
+import StudentAnnouncements from '../components/StudentAnnouncements';
+import StudentDocuments from '../components/StudentDocuments';
+import StudentAddPost from '../components/StudentAddPost';
+import AllPosts from '../components/AllPosts';
+import PendingPosts from '../components/PendingPosts';
+import PendingComments from '../components/PendingComments';
+import AdminAllPost from '../components/AdminAllPost';
 
 // Create the router
 const Router = createBrowserRouter([
@@ -82,6 +90,18 @@ const Router = createBrowserRouter([
         path: "posts", // 
         element: <Posts></Posts>,
       },
+      {
+        path: "admin-all-posts", // 
+        element: <AdminAllPost></AdminAllPost>,
+      },
+      {
+        path: "pending-posts", // 
+        element: <PendingPosts></PendingPosts>,
+      },
+      {
+        path: "pending-comments", // 
+        element: <PendingComments></PendingComments>,
+      },
     ],
   },
   {
@@ -101,12 +121,40 @@ const Router = createBrowserRouter([
     element: <LoginStudent />,
   },
   {
-    path: "/student-dashboard",
+    path: "/student-layout",
     element: (
       <PrivateRouteStudent isAuth={true}>
-        <StudentDashboard />
+        {/* <StudentDashboard /> */}
+        <StudentLayout></StudentLayout>
       </PrivateRouteStudent>
     ),
+    children: [
+      {
+        path: "", // default dashboard for 
+        element: <TotalStudentsCard></TotalStudentsCard>,
+      },
+      {
+        path: "student-dashboard", //  relative path
+        element: <StudentDashboard />,
+      },
+      {
+        path: "student-announcements", // relative path for admins page
+        element: <StudentAnnouncements></StudentAnnouncements>,
+      },
+       {
+        path: "student-documents", // relative path for admins page
+        element: <StudentDocuments></StudentDocuments>,
+      },
+      {
+        path: "student-add-post", // relative path for admins page
+        element: <StudentAddPost></StudentAddPost>,
+      },
+      {
+        path: "student-get-all-post", // relative path for admins page
+        element: <AllPosts></AllPosts>,
+      },
+      
+    ],
   },
   {
     path: "/student-forgot-password",

@@ -23,18 +23,7 @@ function StudentDashboard() {
     fetchStudent();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await fetch("http://localhost/college_api/logout_student.php", {
-        credentials: "include",
-      });
-      Swal.fire("Success", "Logged out successfully", "success").then(() =>
-        navigate("/login-student")
-      );
-    } catch (err) {
-      Swal.fire("Error", "Something went wrong", "error");
-    }
-  };
+  
 
   if (!student) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
 
@@ -43,12 +32,6 @@ function StudentDashboard() {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-4xl font-bold text-gray-800">Welcome, {student.name}</h2>
-          <button
-            className="bg-red-500 text-white px-6 py-2 rounded-lg shadow hover:bg-red-600 transition"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -163,7 +163,31 @@ export default function AdminLayout() {
                       `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
                     }
                   >
-                    📄 Posts
+                    📄 Add Post
+                  </NavLink>
+                  <NavLink
+                    to="pending-posts"
+                    className={({ isActive }) =>
+                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
+                    }
+                  >
+                    📄 Pending  Posts
+                  </NavLink>
+                  <NavLink
+                    to="pending-comments"
+                    className={({ isActive }) =>
+                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
+                    }
+                  >
+                    📄 Pending Comments
+                  </NavLink>
+                  <NavLink
+                    to="admin-all-posts"
+                    className={({ isActive }) =>
+                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
+                    }
+                  >
+                    📄 All Posts
                   </NavLink>
                 </div>
               )}

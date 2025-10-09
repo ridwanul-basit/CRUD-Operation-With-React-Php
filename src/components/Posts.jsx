@@ -8,7 +8,7 @@ export default function Posts() {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch("http://localhost/college_api/get_posts.php", { credentials: "include" });
+      const res = await fetch("http://localhost/college_api/get_my_posts.php", { credentials: "include" });
       const data = await res.json();
       if(data.success) setPosts(data.posts);
     } catch(err){
