@@ -1,23 +1,26 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { CheckCircle, Edit3, Trash2, Plus, Eye } from "lucide-react";
 
-export default function AdminAllPost() {
+export default function AdminAllPostCMS() {
   const [items, setItems] = useState([]);
-  const [commentText, setCommentText] = useState({});
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("post"); // post | comment | all
+  const [statusFilter, setStatusFilter] = useState("approved"); // approved | pending
+  const navigate = useNavigate();
 
-  // Fetch posts + comments
+  // Fetch posts and comments
   const fetchItems = async () => {
-    let postsEndpoint = "http://localhost/college_api/get_posts.php";
-    let commentsEndpoint = "http://localhost/college_api/get_all_comments.php";
-
-    if (statusFilter === "pending") {
-      postsEndpoint = "http://localhost/college_api/admin_pending_posts.php";
-      commentsEndpoint = "http://localhost/college_api/admin_pending_comments.php";
-    }
-
     try {
+      const postsEndpoint =
+        statusFilter === "pending"
+          ? "http://localhost/college_api/admin_pending_posts.php"
+          : "http://localhost/college_api/get_posts.php";
+      const commentsEndpoint =
+        statusFilter === "pending"
+          ? "http://localhost/college_api/admin_pending_comments.php"
+          : "http://localhost/college_api/get_all_comments.php";
+
       const [postsRes, commentsRes] = await Promise.all([
         fetch(postsEndpoint, { credentials: "include" }),
         fetch(commentsEndpoint, { credentials: "include" }),
@@ -29,21 +32,20 @@ export default function AdminAllPost() {
       let combined = [];
 
       if (typeFilter === "all" || typeFilter === "post") {
-        if (postsData.success) {
+        if (postsData.success)
           combined = postsData.posts.map((p) => ({ ...p, type: "post" }));
-        }
       }
-
       if (typeFilter === "all" || typeFilter === "comment") {
-        if (commentsData.success) {
+        if (commentsData.success)
           combined = [
             ...combined,
             ...commentsData.comments.map((c) => ({ ...c, type: "comment" })),
           ];
-        }
       }
 
-      combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      combined.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
       setItems(combined);
     } catch (err) {
       console.error(err);
@@ -54,272 +56,187 @@ export default function AdminAllPost() {
     fetchItems();
   }, [typeFilter, statusFilter]);
 
-  // Add comment
-  const handleAddComment = async (postId) => {
-    if (!commentText[postId] || commentText[postId].trim() === "") {
-      Swal.fire("⚠️ Warning", "Comment cannot be empty", "warning");
-      return;
-    }
+  // Add post
+  const handleAddPost = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: "Add New Post",
+      html: `
+        <input type="text" id="title" class="swal2-input" placeholder="Title">
+        <textarea id="content" class="swal2-textarea" placeholder="Content"></textarea>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Add Post",
+      preConfirm: () => {
+        const title = Swal.getPopup().querySelector("#title").value;
+        const content = Swal.getPopup().querySelector("#content").value;
+        if (!title || !content)
+          Swal.showValidationMessage("Both title and content are required");
+        return { title, content };
+      },
+    });
 
-    try {
-      const res = await fetch("http://localhost/college_api/add_comment.php", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ post_id: postId, content: commentText[postId] }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire("✅ Success", data.message, "success");
-        setCommentText({ ...commentText, [postId]: "" });
+    if (formValues) {
+      try {
+        const res = await fetch("http://localhost/college_api/add_post.php", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formValues),
+        });
+        const data = await res.json();
+        if (data.success) Swal.fire("✅ Added", "Post added successfully", "success");
+        else Swal.fire("❌ Error", data.message, "error");
         fetchItems();
-      } else Swal.fire("❌ Error", data.message, "error");
-    } catch (err) {
-      console.error(err);
+      } catch (err) {
+        Swal.fire("❌ Error", "Something went wrong", "error");
+      }
     }
   };
 
-  // Approve pending post/comment
+  // Approve
   const handleApprove = async (id, type) => {
-    try {
-      const res = await fetch("http://localhost/college_api/approve.php", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, type }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire("✅ Approved", "Item verified successfully", "success");
-        fetchItems();
-      } else Swal.fire("❌ Error", data.message, "error");
-    } catch (err) {
-      console.error(err);
-    }
+    const res = await fetch("http://localhost/college_api/approve.php", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, type }),
+    });
+    const data = await res.json();
+    if (data.success) Swal.fire("✅ Approved", "", "success");
+    else Swal.fire("❌ Error", data.message, "error");
+    fetchItems();
   };
 
-  // Delete post/comment
+  // Delete
   const handleDelete = async (id, type) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
       text: `Delete this ${type}? This action cannot be undone.`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Yes, delete it",
+      confirmButtonText: "Yes, delete",
     });
-
     if (!confirm.isConfirmed) return;
 
-    try {
-      const res = await fetch("http://localhost/college_api/delete.php", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, type }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire("🗑️ Deleted", `${type} removed successfully`, "success");
-        fetchItems();
-      } else Swal.fire("❌ Error", data.message, "error");
-    } catch (err) {
-      console.error(err);
-    }
+    const res = await fetch("http://localhost/college_api/delete.php", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, type }),
+    });
+    const data = await res.json();
+    if (data.success) Swal.fire("🗑️ Deleted", "", "success");
+    else Swal.fire("❌ Error", data.message, "error");
+    fetchItems();
   };
 
-  // Edit post/comment
-  const handleEdit = async (id, type, content) => {
-    if (!content || content.trim() === "") {
-      Swal.fire("⚠️ Warning", "Content cannot be empty", "warning");
-      return;
-    }
-
-    try {
-      const res = await fetch("http://localhost/college_api/edit.php", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, type, content }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire("✏️ Updated", `${type} edited successfully`, "success");
-        fetchItems();
-      } else Swal.fire("❌ Error", data.message, "error");
-    } catch (err) {
-      console.error(err);
-    }
+  // Edit
+  const handleEdit = async (id, type, currentContent) => {
+    const { value } = await Swal.fire({
+      title: `Edit ${type}`,
+      input: "textarea",
+      inputValue: currentContent,
+      showCancelButton: true,
+      confirmButtonText: "Save",
+    });
+    if (!value) return;
+    const res = await fetch("http://localhost/college_api/edit.php", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, type, content: value }),
+    });
+    const data = await res.json();
+    if (data.success) Swal.fire("✏️ Updated", "", "success");
+    else Swal.fire("❌ Error", data.message, "error");
+    fetchItems();
   };
 
   return (
-    <div className="p-6 bg-gray-50 rounded-2xl shadow space-y-6">
-      <h2 className="text-2xl font-bold">🌍 Admin Dashboard</h2>
-
-      {/* Filters */}
-      <div className="flex gap-4 mb-4">
-        <div>
-          <label className="mr-2 font-semibold">Type:</label>
+    <div className="p-8 bg-gray-50 min-h-screen rounded-2xl">
+      <div className="flex flex-wrap justify-between gap-4 mb-6">
+        <div className="flex gap-4">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="border p-1 rounded"
+            className="px-4 py-2 border rounded-xl"
           >
-            <option value="all">All</option>
             <option value="post">Posts</option>
             <option value="comment">Comments</option>
+            <option value="all">All</option>
           </select>
-        </div>
-
-        <div>
-          <label className="mr-2 font-semibold">Status:</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border p-1 rounded"
+            className="px-4 py-2 border rounded-xl"
           >
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
             <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
           </select>
         </div>
+        <button
+          onClick={handleAddPost}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2"
+        >
+          <Plus size={16} /> Add Post
+        </button>
       </div>
 
-      {items.length === 0 && <p>No items found</p>}
-
-      {/* Display posts and comments */}
-      {items.map((item) => (
-        <div
-          key={`${item.type}-${item.id}`}
-          className="bg-white p-4 rounded shadow space-y-2 border border-gray-200"
-        >
-          {/* POST */}
-          {item.type === "post" ? (
-            <>
-              <h3 className="font-semibold">{item.title}</h3>
-              <p>{item.content}</p>
-            </>
-          ) : (
-            <>
-              <p>{item.content}</p>
-              <p className="text-sm text-gray-500">On Post ID: {item.post_id}</p>
-            </>
-          )}
-
-          <p className="text-sm text-gray-500">
-            {item.type === "post" ? "Posted by" : "Comment by"}{" "}
-            {item.author_type === "admin" ? "🛡️ Admin" : `🎓 ${item.author_name}`}{" "}
-            {item.author_id ? `(ID: ${item.author_id})` : ""} | Status:{" "}
-            <span
-              className={`font-semibold ${
-                item.status === "approved" ? "text-green-600" : "text-yellow-600"
-              }`}
-            >
-              {item.status}
-            </span>
-          </p>
-
-          {/* Admin Buttons */}
-          <div className="flex flex-wrap gap-2 mt-2">
-            {item.status === "pending" && (
-              <button
-                onClick={() => handleApprove(item.id, item.type)}
-                className="btn btn-success"
-              >
-                ✅ Approve
-              </button>
-            )}
-            <button onClick={() => handleDelete(item.id, item.type)} className="btn btn-error">
-              🗑️ Delete
-            </button>
-            <button
-              onClick={() =>
-                Swal.fire({
-                  title: `Edit ${item.type}`,
-                  input: "textarea",
-                  inputValue: item.content,
-                  showCancelButton: true,
-                  confirmButtonText: "Save",
-                }).then((result) => {
-                  if (result.isConfirmed) handleEdit(item.id, item.type, result.value);
-                })
-              }
-              className="btn btn-warning"
-            >
-              ✏️ Edit
-            </button>
-          </div>
-
-          {/* Comments under posts */}
-          {item.type === "post" && item.comments && (
-            <div className="space-y-1 mt-2">
-              <h4 className="font-semibold">Comments:</h4>
-              {item.comments.map((c) => (
-                <div
-                  key={c.id}
-                  className="pl-2 border-l-2 border-gray-300 flex justify-between items-center"
-                >
-                  <p>
-                    <strong>{c.author_name}</strong> ({c.author_type}): {c.content} |{" "}
-                    <span
-                      className={`font-semibold ${
-                        c.status === "approved" ? "text-green-600" : "text-yellow-600"
-                      }`}
-                    >
-                      {c.status}
-                    </span>
-                  </p>
-
-                  <div className="flex gap-2">
-                    {c.status === "pending" && (
-                      <button
-                        onClick={() => handleApprove(c.id, "comment")}
-                        className="btn btn-success"
-                      >
-                        ✅ Approve
-                      </button>
-                    )}
-                    <button onClick={() => handleDelete(c.id, "comment")} className="btn btn-error">
-                      🗑️
-                    </button>
+      <div className="overflow-x-auto bg-white rounded-xl shadow">
+        <table className="min-w-full text-left">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2">ID</th>
+              <th className="px-4 py-2">Title / Comment</th>
+              <th className="px-4 py-2">Content</th>
+              <th className="px-4 py-2">Author</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={`${item.type}-${item.id}`} className="border-b border-b-gray-300 hover:bg-gray-50">
+                <td className="px-4 py-2">{item.id}</td>
+                <td className="px-4 py-2">{item.type === "post" ? item.title : "💬 Comment"}</td>
+                <td className="px-4 py-2 truncate max-w-xs">{item.content}</td>
+                <td className="px-4 py-2">{item.author_name}</td>
+                <td className="px-4 py-2">{item.status}</td>
+                <td className="px-4 py-2 flex gap-2">
+                  {item.status === "pending" && (
                     <button
-                      onClick={() =>
-                        Swal.fire({
-                          title: "Edit Comment",
-                          input: "textarea",
-                          inputValue: c.content,
-                          showCancelButton: true,
-                          confirmButtonText: "Save",
-                        }).then((result) => {
-                          if (result.isConfirmed) handleEdit(c.id, "comment", result.value);
-                        })
-                      }
-                      className="btn btn-warning"
+                      onClick={() => handleApprove(item.id, item.type)}
+                      className="bg-green-600 text-white px-2 py-1 rounded"
                     >
-                      ✏️
+                      <CheckCircle size={16} />
                     </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Add comment input */}
-          {item.type === "post" && (
-            <div className="flex gap-2 mt-2">
-              <input
-                type="text"
-                placeholder="Add a comment..."
-                value={commentText[item.id] || ""}
-                onChange={(e) => setCommentText({ ...commentText, [item.id]: e.target.value })}
-                className="border p-1 rounded flex-1"
-              />
-              <button onClick={() => handleAddComment(item.id)} className="btn btn-primary">
-                💬 Comment
-              </button>
-            </div>
-          )}
-        </div>
-      ))}
+                  )}
+                  <button
+                    onClick={() => handleEdit(item.id, item.type, item.content)}
+                    className="bg-yellow-500 text-white px-2 py-1 rounded"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id, item.type)}
+                    className="bg-red-600 text-white px-2 py-1 rounded"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                  {item.type === "post" && (
+                    <button
+                      onClick={() => navigate(`/adminpanel/post/${item.id}`)}
+                      className="bg-blue-600 text-white px-2 py-1 rounded"
+                    >
+                      <Eye size={16} />
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

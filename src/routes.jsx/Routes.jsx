@@ -31,6 +31,7 @@ import AllPosts from '../components/AllPosts';
 import PendingPosts from '../components/PendingPosts';
 import PendingComments from '../components/PendingComments';
 import AdminAllPost from '../components/AdminAllPost';
+import PostView from '../components/PostView';
 
 // Create the router
 const Router = createBrowserRouter([
@@ -102,6 +103,10 @@ const Router = createBrowserRouter([
         path: "pending-comments", // 
         element: <PendingComments></PendingComments>,
       },
+      {
+    path: "post/:postId",
+    element: <PostView />
+     } ,
     ],
   },
   {

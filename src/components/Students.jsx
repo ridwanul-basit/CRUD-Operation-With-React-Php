@@ -18,8 +18,10 @@ export default function Students() {
     password: "",
     confirmPassword: "",
   });
+  const [filterVerified, setFilterVerified] = useState("all"); // all | verified | not_verified
+  const [searchText, setSearchText] = useState("");
 
-  // Fetch students from backend
+  // Fetch students
   const fetchStudents = async () => {
     setLoading(true);
     try {
@@ -39,6 +41,7 @@ export default function Students() {
     fetchStudents();
   }, []);
 
+  // Delete student
   const handleDelete = async (id) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -65,6 +68,7 @@ export default function Students() {
     }
   };
 
+  // Open modal for edit
   const handleEdit = (student) => {
     setEditStudent(student);
     setFormData({
@@ -75,6 +79,7 @@ export default function Students() {
     setModalOpen(true);
   };
 
+  // Open modal for add
   const handleAdd = () => {
     setEditStudent(null);
     setFormData({
@@ -92,10 +97,12 @@ export default function Students() {
     setModalOpen(true);
   };
 
+  // Form input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Submit add/edit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -111,18 +118,8 @@ export default function Students() {
 
     try {
       const payload = editStudent
-        ? {
-            ...formData,
-            id: editStudent.id,
-            age: Number(formData.age),
-            cgpa: Number(formData.cgpa),
-          }
-        : {
-            ...formData,
-            age: Number(formData.age),
-            cgpa: Number(formData.cgpa),
-            password: formData.password,
-          };
+        ? { ...formData, id: editStudent.id, age: Number(formData.age), cgpa: Number(formData.cgpa) }
+        : { ...formData, age: Number(formData.age), cgpa: Number(formData.cgpa), password: formData.password };
 
       const res = await fetch(url, {
         method: "POST",
@@ -143,18 +140,52 @@ export default function Students() {
     }
   };
 
+  // Filter and search students
+  const filteredStudents = students.filter((s) => {
+    let matchesVerified =
+      filterVerified === "all"
+        ? true
+        : filterVerified === "verified"
+        ? s.email_verified_at
+        : !s.email_verified_at;
+
+    let matchesSearch =
+      s.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      s.email.toLowerCase().includes(searchText.toLowerCase());
+
+    return matchesVerified && matchesSearch;
+  });
+
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-6">
+      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
         <h2 className="text-2xl font-bold">Students</h2>
-        <button
-          onClick={handleAdd}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
-        >
-          Add Student
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <input
+            type="text"
+            placeholder="Search by name or email"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="border px-3 py-2 rounded"
+          />
+          <select
+            value={filterVerified}
+            onChange={(e) => setFilterVerified(e.target.value)}
+            className="border px-3 py-2 rounded"
+          >
+            <option value="all">All Types</option>
+            <option value="verified">Verified</option>
+            <option value="not_verified">Not Verified</option>
+          </select>
+          <button
+            onClick={handleAdd}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
+          >
+            Add Student
+          </button>
+        </div>
       </div>
 
       <div className="overflow-auto">
@@ -170,11 +201,12 @@ export default function Students() {
               <th className="p-2">University</th>
               <th className="p-2">CGPA</th>
               <th className="p-2">Major</th>
+              <th className="p-2">Verified</th>
               <th className="p-2">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {students.map((s) => (
+            {filteredStudents.map((s) => (
               <tr key={s.id} className="border-b border-gray-300 hover:bg-gray-100 text-center">
                 <td className="p-2">{s.id}</td>
                 <td className="p-2">{s.name}</td>
@@ -185,6 +217,7 @@ export default function Students() {
                 <td className="p-2">{s.university}</td>
                 <td className="p-2">{s.cgpa}</td>
                 <td className="p-2">{s.major}</td>
+                <td className="p-2">{s.email_verified_at ? "Yes" : "No"}</td>
                 <td className="p-2 space-x-2">
                   <button
                     className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-400"
@@ -201,6 +234,13 @@ export default function Students() {
                 </td>
               </tr>
             ))}
+            {filteredStudents.length === 0 && (
+              <tr>
+                <td colSpan="11" className="text-center p-4 text-gray-500">
+                  No students found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -259,8 +299,12 @@ export default function Students() {
                   </div>
                 ))}
               <div className="md:col-span-2 flex justify-end gap-2 mt-4">
-                <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 rounded border hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-500">{editStudent ? "Update" : "Add"}</button>
+                <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 rounded border hover:bg-gray-100">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-500">
+                  {editStudent ? "Update" : "Add"}
+                </button>
               </div>
             </form>
           </div>

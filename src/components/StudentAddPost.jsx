@@ -151,7 +151,7 @@ export default function StudentAddPost() {
           onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
           className="textarea textarea-bordered w-full"
         />
-        <button type="submit" className="btn btn-primary w-1/4">
+        <button type="submit" className="btn btn-primary w-1/6">
           Add Post
         </button>
       </form>
@@ -202,10 +202,10 @@ export default function StudentAddPost() {
                     <div className="flex gap-2">
                       {c.author_type === "student" && (
                         <>
-                          <button onClick={() => handleEdit(c.id, "comment", c.content)} className="btn btn-warning">
+                          <button onClick={() => handleEdit(c.id, "comment", c.content)} className="btn btn-warning w-1/4">
                             ✏️
                           </button>
-                          <button onClick={() => handleDelete(c.id, "comment")} className="btn btn-error">
+                          <button onClick={() => handleDelete(c.id, "comment")} className="btn btn-error w-1/4">
                             🗑️
                           </button>
                         </>
