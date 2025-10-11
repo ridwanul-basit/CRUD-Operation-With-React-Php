@@ -178,7 +178,7 @@ export default function AllPosts() {
   };
 
   return (
-    <div className="p-8 bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen space-y-6">
+    <div className="p-8 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 min-h-screen space-y-6">
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-gray-800">🌍 Posts</h2>
@@ -188,7 +188,7 @@ export default function AllPosts() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-300 focus:outline-none"
+            className="border border-gray-400 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-300 focus:outline-none"
           >
             <option value="all">All Posts</option>
             <option value="admin">Admin Posts</option>

@@ -1,23 +1,25 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { Edit3, Trash2 } from "lucide-react";
+import { Edit3, Trash2, ArrowLeft, MessageSquarePlus } from "lucide-react";
 
 export default function PostView() {
-  const { postId } = useParams(); // get post id from URL
+  const { postId } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
 
-  // Fetch all posts and find the one we need
   const fetchPost = async () => {
     try {
-      const res = await fetch("http://localhost/college_api/get_posts.php", { credentials: "include" });
+      const res = await fetch("http://localhost/college_api/get_posts.php", {
+        credentials: "include",
+      });
       const data = await res.json();
-      if (!data.success) return Swal.fire("❌ Error", data.message || "Failed to fetch posts", "error");
+      if (!data.success)
+        return Swal.fire("❌ Error", data.message || "Failed to fetch posts", "error");
 
-      const selectedPost = data.posts.find(p => p.id == postId);
+      const selectedPost = data.posts.find((p) => p.id == postId);
       if (!selectedPost) return Swal.fire("❌ Error", "Post not found", "error");
 
       setPost(selectedPost);
@@ -32,9 +34,9 @@ export default function PostView() {
     fetchPost();
   }, [postId]);
 
-  // Add a comment
   const handleAddComment = async () => {
-    if (!newComment.trim()) return Swal.fire("⚠️ Warning", "Comment cannot be empty", "warning");
+    if (!newComment.trim())
+      return Swal.fire("⚠️ Warning", "Comment cannot be empty", "warning");
 
     try {
       const res = await fetch("http://localhost/college_api/add_comment.php", {
@@ -56,7 +58,6 @@ export default function PostView() {
     }
   };
 
-  // Edit comment
   const handleEditComment = async (id, content) => {
     const { value } = await Swal.fire({
       title: "Edit Comment",
@@ -83,7 +84,6 @@ export default function PostView() {
     }
   };
 
-  // Delete comment
   const handleDeleteComment = async (id) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -110,60 +110,95 @@ export default function PostView() {
     }
   };
 
-  if (!post) return <p className="p-8 text-center text-gray-500">Loading post...</p>;
+  if (!post)
+    return (
+      <div className="flex items-center justify-center h-screen text-gray-500 text-lg">
+        Loading post...
+      </div>
+    );
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen rounded-2xl">
-      <button onClick={() => navigate(-1)} className="mb-4 text-blue-600 underline">
-        ← Back
-      </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100  p-6 md:p-10">
+      <div className="max-w-3xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 transition mb-6"
+        >
+          <ArrowLeft size={18} /> Back
+        </button>
 
-      {/* Post Content */}
-      <div className="bg-white p-6 rounded-xl shadow mb-6">
-        <h2 className="text-2xl font-bold mb-2">{post.title}</h2>
-        <p className="text-gray-700 mb-2">{post.content}</p>
-        <p className="text-sm text-gray-500">
-          Author: {post.author_name} ({post.author_type})
-        </p>
-        <p className="text-sm text-gray-500">
-          Posted: {new Date(post.created_at).toLocaleString()}
-        </p>
-      </div>
-
-      {/* Comments Section */}
-      <div className="bg-white p-6 rounded-xl shadow">
-        <h3 className="text-xl font-semibold mb-4">Comments</h3>
-
-        {comments.length === 0 && <p className="text-gray-500 italic">No comments yet.</p>}
-
-        {comments.map((c) => (
-          <div key={c.id} className="border-b border-gray-200 py-2 flex justify-between items-center">
-            <div>
-              <strong>{c.author_name} ({c.author_type})</strong>: {c.content}
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => handleEditComment(c.id, c.content)} className="text-yellow-600">
-                <Edit3 size={16} />
-              </button>
-              <button onClick={() => handleDeleteComment(c.id)} className="text-red-600">
-                <Trash2 size={16} />
-              </button>
-            </div>
+        {/* Post Card */}
+        <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 border border-gray-100 hover:shadow-2xl transition">
+          <h2 className="text-3xl font-bold mb-2 text-gray-800">{post.title}</h2>
+          <p className="text-gray-700 leading-relaxed mb-4">{post.content}</p>
+          <div className="flex justify-between text-sm text-gray-500 border-t border-t-gray-300 pt-3">
+            <span>
+              🧑‍💻 {post.author_name} ({post.author_type})
+            </span>
+            <span>{new Date(post.created_at).toLocaleString()}</span>
           </div>
-        ))}
+        </div>
 
-        {/* Add Comment */}
-        <div className="mt-4 flex gap-2">
-          <input
-            type="text"
-            placeholder="Add a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="flex-1 border rounded px-3 py-2"
-          />
-          <button onClick={handleAddComment} className="bg-blue-600 text-white px-4 py-2 rounded">
-            Add
-          </button>
+        {/* Comments Section */}
+        <div className="mt-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
+          <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
+            <MessageSquarePlus size={22} /> Comments
+          </h3>
+
+          {comments.length === 0 ? (
+            <p className="text-gray-500 italic text-center py-6">
+              No comments yet. Be the first to share your thoughts 💬
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {comments.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex justify-between items-start bg-gray-50 rounded-xl p-3 hover:bg-gray-100 transition"
+                >
+                  <div>
+                    <div className="font-medium text-gray-800">
+                      {c.author_name}{" "}
+                      <span className="text-sm text-gray-500">({c.author_type})</span>
+                    </div>
+                    <p className="text-gray-700 mt-1">{c.content}</p>
+                  </div>
+                  <div className="flex gap-2 text-gray-500">
+                    <button
+                      onClick={() => handleEditComment(c.id, c.content)}
+                      className="hover:text-yellow-600 transition"
+                    >
+                      <Edit3 size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteComment(c.id)}
+                      className="hover:text-red-600 transition"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add Comment Input */}
+          <div className="mt-6 flex gap-3">
+            <input
+              type="text"
+              placeholder="Write your comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none"
+            />
+            <button
+              onClick={handleAddComment}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-medium transition transform hover:scale-105"
+            >
+              Add
+            </button>
+          </div>
         </div>
       </div>
     </div>

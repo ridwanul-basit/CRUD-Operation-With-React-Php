@@ -40,7 +40,7 @@ export default function TotalStudentsCard() {
   const COLORS = ["#10B981", "#EF4444"]; // Verified=green, Non-Verified=red
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-8">
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Students */}

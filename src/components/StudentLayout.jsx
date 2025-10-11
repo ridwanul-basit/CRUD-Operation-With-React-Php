@@ -101,16 +101,7 @@ export default function StudentLayout() {
               {collapsed ? "📄" : "Documents"}
             </NavLink>
 
-            <NavLink
-              to="student-add-post"
-              className={({ isActive }) =>
-                `flex items-center p-3 hover:bg-gray-700 rounded transition-colors ${
-                  isActive ? "bg-gray-700" : ""
-                }`
-              }
-            >
-              {collapsed ? "📊" : "Add Post"}
-            </NavLink>
+            
             <NavLink
               to="student-get-all-post"
               className={({ isActive }) =>
@@ -125,7 +116,7 @@ export default function StudentLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 bg-gray-100 p-6 overflow-auto">
+        <main className="flex-1 bg-gray-100  overflow-auto">
           <Outlet />
         </main>
       </div>

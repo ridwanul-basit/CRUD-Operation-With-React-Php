@@ -63,7 +63,7 @@ export default function Admins() {
   };
 
   return (
-    <div>
+    <div className="p-6">
       <div className="flex justify-between mb-4">
         <h2 className="text-2xl font-bold">Admins</h2>
         <button onClick={handleAdd} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500">Add Admin</button>

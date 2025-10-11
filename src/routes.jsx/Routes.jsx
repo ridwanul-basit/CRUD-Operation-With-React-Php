@@ -26,10 +26,7 @@ import Posts from '../components/Posts';
 import StudentLayout from '../components/StudentLayout';
 import StudentAnnouncements from '../components/StudentAnnouncements';
 import StudentDocuments from '../components/StudentDocuments';
-import StudentAddPost from '../components/StudentAddPost';
 import AllPosts from '../components/AllPosts';
-import PendingPosts from '../components/PendingPosts';
-import PendingComments from '../components/PendingComments';
 import AdminAllPost from '../components/AdminAllPost';
 import PostView from '../components/PostView';
 
@@ -96,17 +93,9 @@ const Router = createBrowserRouter([
         element: <AdminAllPost></AdminAllPost>,
       },
       {
-        path: "pending-posts", // 
-        element: <PendingPosts></PendingPosts>,
+      path: "post/:postId",
+      element: <PostView />
       },
-      {
-        path: "pending-comments", // 
-        element: <PendingComments></PendingComments>,
-      },
-      {
-    path: "post/:postId",
-    element: <PostView />
-     } ,
     ],
   },
   {
@@ -149,10 +138,6 @@ const Router = createBrowserRouter([
        {
         path: "student-documents", // relative path for admins page
         element: <StudentDocuments></StudentDocuments>,
-      },
-      {
-        path: "student-add-post", // relative path for admins page
-        element: <StudentAddPost></StudentAddPost>,
       },
       {
         path: "student-get-all-post", // relative path for admins page

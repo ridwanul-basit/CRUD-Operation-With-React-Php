@@ -6,6 +6,7 @@ export default function Students() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editStudent, setEditStudent] = useState(null);
+  const [selected, setSelected] = useState([]); // ✅ multi-select
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -18,10 +19,10 @@ export default function Students() {
     password: "",
     confirmPassword: "",
   });
-  const [filterVerified, setFilterVerified] = useState("all"); // all | verified | not_verified
+  const [filterVerified, setFilterVerified] = useState("all");
   const [searchText, setSearchText] = useState("");
 
-  // Fetch students
+  // ✅ Fetch students
   const fetchStudents = async () => {
     setLoading(true);
     try {
@@ -41,34 +42,73 @@ export default function Students() {
     fetchStudents();
   }, []);
 
-  // Delete student
-  const handleDelete = async (id) => {
+  // ✅ Selection handlers
+  const toggleSelect = (id) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.length === filteredStudents.length) {
+      setSelected([]);
+    } else {
+      setSelected(filteredStudents.map((s) => s.id));
+    }
+  };
+
+  // ✅ Delete selected
+  const handleDeleteSelected = async (ids = selected) => {
+    if (ids.length === 0)
+      return Swal.fire("No selection", "Select at least one student", "info");
+
     const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "This will delete the student permanently.",
+      title: `Delete ${ids.length > 1 ? "selected students" : "this student"}?`,
+      text: `This will permanently delete ${
+        ids.length > 1 ? ids.length + " students" : "the student"
+      }.`,
       icon: "warning",
       showCancelButton: true,
     });
-    if (result.isConfirmed) {
-      try {
-        const res = await fetch("http://localhost/college_api/delete_student.php", {
+
+    if (!result.isConfirmed) return;
+
+    try {
+      for (const id of ids) {
+        await fetch("http://localhost/college_api/delete_student.php", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id }),
         });
-        const data = await res.json();
-        if (data.success) {
-          Swal.fire("Deleted!", data.message, "success");
-          fetchStudents();
-        } else Swal.fire("Error", data.message, "error");
-      } catch {
-        Swal.fire("Error", "Something went wrong", "error");
       }
+      Swal.fire("Deleted!", "Successfully deleted", "success");
+      setSelected([]);
+      fetchStudents();
+    } catch {
+      Swal.fire("Error", "Something went wrong", "error");
     }
   };
 
-  // Open modal for edit
+  // ✅ Export selected to CSV
+  const handleExportSelected = () => {
+    if (selected.length === 0)
+      return Swal.fire("No selection", "Select at least one student", "info");
+
+    const exportData = students.filter((s) => selected.includes(s.id));
+    const csv = [
+      Object.keys(exportData[0]).join(","),
+      ...exportData.map((s) => Object.values(s).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "students.csv";
+    link.click();
+  };
+
+  // ✅ Edit / Add Student
   const handleEdit = (student) => {
     setEditStudent(student);
     setFormData({
@@ -79,7 +119,6 @@ export default function Students() {
     setModalOpen(true);
   };
 
-  // Open modal for add
   const handleAdd = () => {
     setEditStudent(null);
     setFormData({
@@ -97,16 +136,13 @@ export default function Students() {
     setModalOpen(true);
   };
 
-  // Form input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Submit add/edit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Password validation only on add
     if (!editStudent && formData.password !== formData.confirmPassword) {
       Swal.fire("Error", "Password and Confirm Password do not match", "error");
       return;
@@ -140,16 +176,16 @@ export default function Students() {
     }
   };
 
-  // Filter and search students
+  // ✅ Filters
   const filteredStudents = students.filter((s) => {
-    let matchesVerified =
+    const matchesVerified =
       filterVerified === "all"
         ? true
         : filterVerified === "verified"
         ? s.email_verified_at
         : !s.email_verified_at;
 
-    let matchesSearch =
+    const matchesSearch =
       s.name.toLowerCase().includes(searchText.toLowerCase()) ||
       s.email.toLowerCase().includes(searchText.toLowerCase());
 
@@ -159,21 +195,22 @@ export default function Students() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 min-h-screen">
+      {/* Header Section */}
       <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-        <h2 className="text-2xl font-bold">Students</h2>
+        <h2 className="text-3xl font-extrabold text-gray-800">🎓 Students Management</h2>
         <div className="flex gap-2 flex-wrap">
           <input
             type="text"
-            placeholder="Search by name or email"
+            placeholder="🔍 Search by name or email"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="border px-3 py-2 rounded"
+            className="border border-gray-400 px-3 py-2 rounded shadow-sm"
           />
           <select
             value={filterVerified}
             onChange={(e) => setFilterVerified(e.target.value)}
-            className="border px-3 py-2 rounded"
+            className="border px-3 border-gray-400 py-2 rounded shadow-sm"
           >
             <option value="all">All Types</option>
             <option value="verified">Verified</option>
@@ -183,32 +220,73 @@ export default function Students() {
             onClick={handleAdd}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
           >
-            Add Student
+            ➕ Add Student
           </button>
         </div>
       </div>
 
-      <div className="overflow-auto">
-        <table className="min-w-full bg-white rounded shadow">
-          <thead className="bg-gray-200">
+      {/* Selected Action Buttons */}
+      {selected.length > 0 && (
+        <div className="mb-3 flex gap-2">
+          <button
+            onClick={() => handleDeleteSelected(selected)}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500"
+          >
+            🗑️ Delete Selected ({selected.length})
+          </button>
+          <button
+            onClick={handleExportSelected}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500"
+          >
+            📤 Export
+          </button>
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="overflow-auto shadow-lg rounded-xl border border-gray-200">
+        <table className="min-w-full text-sm text-center border-collapse">
+          <thead className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
             <tr>
-              <th className="p-2">ID</th>
-              <th className="p-2">Name</th>
-              <th className="p-2">Email</th>
-              <th className="p-2">Roll</th>
-              <th className="p-2">Age</th>
-              <th className="p-2">Gender</th>
-              <th className="p-2">University</th>
-              <th className="p-2">CGPA</th>
-              <th className="p-2">Major</th>
-              <th className="p-2">Verified</th>
-              <th className="p-2">Actions</th>
+              <th className="p-3">
+                <input
+                  type="checkbox"
+                  onChange={toggleSelectAll}
+                  checked={
+                    selected.length === filteredStudents.length &&
+                    filteredStudents.length > 0
+                  }
+                />
+              </th>
+              <th className="p-3">ID</th>
+              <th className="p-3">Name</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Roll</th>
+              <th className="p-3">Age</th>
+              <th className="p-3">Gender</th>
+              <th className="p-3">University</th>
+              <th className="p-3">CGPA</th>
+              <th className="p-3">Major</th>
+              <th className="p-3">Verified</th>
+              <th className="p-3">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredStudents.map((s) => (
-              <tr key={s.id} className="border-b border-gray-300 hover:bg-gray-100 text-center">
-                <td className="p-2">{s.id}</td>
+              <tr
+                key={s.id}
+                className={`border-t border-t-gray-300 hover:bg-blue-50 ${
+                  selected.includes(s.id) ? "bg-blue-100" : ""
+                }`}
+              >
+                <td className="p-2">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(s.id)}
+                    onChange={() => toggleSelect(s.id)}
+                  />
+                </td>
+                <td className="p-2 font-semibold">{s.id}</td>
                 <td className="p-2">{s.name}</td>
                 <td className="p-2">{s.email}</td>
                 <td className="p-2">{s.roll}</td>
@@ -217,26 +295,26 @@ export default function Students() {
                 <td className="p-2">{s.university}</td>
                 <td className="p-2">{s.cgpa}</td>
                 <td className="p-2">{s.major}</td>
-                <td className="p-2">{s.email_verified_at ? "Yes" : "No"}</td>
+                <td className="p-2">{s.email_verified_at ? "✅" : "❌"}</td>
                 <td className="p-2 space-x-2">
                   <button
                     className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-400"
                     onClick={() => handleEdit(s)}
                   >
-                    Edit
+                    ✏️
                   </button>
                   <button
                     className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-400"
-                    onClick={() => handleDelete(s.id)}
+                    onClick={() => handleDeleteSelected([s.id])}
                   >
-                    Delete
+                    🗑️
                   </button>
                 </td>
               </tr>
             ))}
             {filteredStudents.length === 0 && (
               <tr>
-                <td colSpan="11" className="text-center p-4 text-gray-500">
+                <td colSpan="12" className="p-4 text-gray-500 italic">
                   No students found
                 </td>
               </tr>
@@ -247,9 +325,9 @@ export default function Students() {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center z-50">
-          <div className="bg-white/90 backdrop-blur-xl rounded shadow-lg p-6 w-full max-w-2xl">
-            <h3 className="text-2xl font-bold mb-4 text-center">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white/95 rounded-xl shadow-2xl p-6 w-full max-w-2xl border border-gray-200">
+            <h3 className="text-2xl font-bold mb-4 text-center text-blue-700">
               {editStudent ? "Edit Student" : "Add Student"}
             </h3>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -268,20 +346,22 @@ export default function Students() {
                 .filter(Boolean)
                 .map((field) => (
                   <div key={field.name} className="flex flex-col">
-                    <label className="font-semibold">
-                      {field.name.charAt(0).toUpperCase() + field.name.slice(1)}
+                    <label className="font-semibold capitalize">
+                      {field.name.replace(/([A-Z])/g, " $1")}
                     </label>
                     {field.type === "select" ? (
                       <select
                         name={field.name}
-                        className="input input-bordered"
+                        className="border border-gray-300 rounded px-3 py-2"
                         value={formData[field.name]}
                         onChange={handleChange}
                         required
                       >
                         <option value="">Select {field.name}</option>
                         {field.options.map((opt) => (
-                          <option key={opt} value={opt}>{opt}</option>
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
                         ))}
                       </select>
                     ) : (
@@ -290,7 +370,7 @@ export default function Students() {
                         step={field.step || undefined}
                         name={field.name}
                         placeholder={`Enter ${field.name}`}
-                        className="input input-bordered"
+                        className="border border-gray-300 rounded px-3 py-2"
                         value={formData[field.name]}
                         onChange={handleChange}
                         required
@@ -299,10 +379,17 @@ export default function Students() {
                   </div>
                 ))}
               <div className="md:col-span-2 flex justify-end gap-2 mt-4">
-                <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 rounded border hover:bg-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="px-4 py-2 rounded border hover:bg-gray-100"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-500">
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-500"
+                >
                   {editStudent ? "Update" : "Add"}
                 </button>
               </div>

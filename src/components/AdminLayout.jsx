@@ -100,14 +100,14 @@ export default function AdminLayout() {
                   >
                     Total Students
                   </NavLink>
-                  <NavLink
+                  {/* <NavLink
                     to="verified-students"
                     className={({ isActive }) =>
                       `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
                     }
                   >
                     📧 Verified Students
-                  </NavLink>
+                  </NavLink> */}
                   <NavLink
                     to="pending-verified-students"
                     className={({ isActive }) =>
@@ -157,37 +157,13 @@ export default function AdminLayout() {
                   >
                     📄 Documents
                   </NavLink>
-                   <NavLink
-                    to="posts"
-                    className={({ isActive }) =>
-                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
-                    }
-                  >
-                    📄 Add Post
-                  </NavLink>
-                  <NavLink
-                    to="pending-posts"
-                    className={({ isActive }) =>
-                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
-                    }
-                  >
-                    📄 Pending  Posts
-                  </NavLink>
-                  <NavLink
-                    to="pending-comments"
-                    className={({ isActive }) =>
-                      `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
-                    }
-                  >
-                    📄 Pending Comments
-                  </NavLink>
                   <NavLink
                     to="admin-all-posts"
                     className={({ isActive }) =>
                       `p-2 rounded hover:bg-gray-600 transition-colors ${isActive ? "bg-gray-700" : ""}`
                     }
                   >
-                    📄 All Posts
+                  📰  Posts
                   </NavLink>
                 </div>
               )}
@@ -226,7 +202,7 @@ export default function AdminLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 bg-gray-100 p-6 overflow-auto">
+        <main className="flex-1 bg-gray-100  overflow-auto">
           <Outlet />
         </main>
       </div>

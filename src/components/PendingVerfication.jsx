@@ -64,7 +64,7 @@ export default function PendingVerification() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="p-6">
+    <div className="p-8">
       <h2 className="text-2xl font-bold mb-4">Pending Verification</h2>
       {students.length === 0 ? (
         <p>No pending students found.</p>
