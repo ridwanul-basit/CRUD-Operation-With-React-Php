@@ -349,7 +349,7 @@ export default function AdminAllPost() {
                   {item.type === "post" ? (
                     <span className="font-semibold text-indigo-700">
                       {item.title}
-                    </span>
+                    </span> 
                   ) : (
                     <span className="text-gray-500 italic">💬 Comment</span>
                   )}

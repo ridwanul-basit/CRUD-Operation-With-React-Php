@@ -15,14 +15,12 @@ import VerifyEmail from '../components/VerifyEmail';
 import AdminLayout from '../components/AdminLayout';
 import Students from '../components/Students';
 import TotalStudentsCard from '../components/TotalStudentsCard';
-import VerifiedStudents from '../components/VerifiedStudents';
 import PendingVerification from '../components/PendingVerfication';
 import Admins from '../components/Admins';
 import AdminProfile from '../components/AdminProfile';
 import Graph from '../components/Graph';
 import Announcements from '../components/Announcements';
 import Documents from '../components/Documents';
-import Posts from '../components/Posts';
 import StudentLayout from '../components/StudentLayout';
 import StudentAnnouncements from '../components/StudentAnnouncements';
 import StudentDocuments from '../components/StudentDocuments';
@@ -57,10 +55,6 @@ const Router = createBrowserRouter([
         element: <TotalStudentsCard></TotalStudentsCard>
       },
       {
-        path: "verified-students", // relative path for profile
-        element: <VerifiedStudents></VerifiedStudents>,
-      },
-      {
         path: "pending-verified-students", // relative path for profile
         element: <PendingVerification></PendingVerification>,
       },
@@ -84,10 +78,7 @@ const Router = createBrowserRouter([
         path: "documents", // 
         element: <Documents></Documents>,
       },
-      {
-        path: "posts", // 
-        element: <Posts></Posts>,
-      },
+     
       {
         path: "admin-all-posts", // 
         element: <AdminAllPost></AdminAllPost>,

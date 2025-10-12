@@ -254,7 +254,7 @@ export default function AllPosts() {
               </p>
 
               {/* Edit/Delete Post */}
-              {post.author_type === "student" && (
+              {post.author_name === currentStudent.name && (
                 <div className="flex gap-3 mb-3">
                   <button
                     onClick={() => handleEdit(post.id, "post", post.content)}
