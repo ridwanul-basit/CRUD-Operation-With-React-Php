@@ -8,7 +8,6 @@ export default function AllPosts() {
   const [filter, setFilter] = useState("all"); // all | admin | my
   const [currentStudent, setCurrentStudent] = useState(null);
 
-  // Fetch logged-in student info
   const fetchCurrentStudent = async () => {
     try {
       const res = await fetch("http://localhost/college_api/student_dashboard.php", {
@@ -21,7 +20,6 @@ export default function AllPosts() {
     }
   };
 
-  // Fetch posts
   const fetchPosts = async () => {
     try {
       let url = "http://localhost/college_api/get_posts.php";
@@ -29,17 +27,12 @@ export default function AllPosts() {
 
       const res = await fetch(url, { credentials: "include" });
       const data = await res.json();
-
-      if (!data.success) {
-        setPosts([]);
-        return;
-      }
+      if (!data.success) return setPosts([]);
 
       let fetchedPosts = data.posts;
       if (filter === "admin") {
         fetchedPosts = fetchedPosts.filter((p) => p.author_type === "admin");
       }
-
       setPosts(fetchedPosts);
     } catch (err) {
       console.error(err);
@@ -56,7 +49,6 @@ export default function AllPosts() {
     fetchPosts();
   }, [filter]);
 
-  // Add Post
   const handleAddPost = async () => {
     const { value: formValues } = await Swal.fire({
       title: "✏️ Create a Post",
@@ -97,7 +89,6 @@ export default function AllPosts() {
     }
   };
 
-  // Add Comment
   const handleAddComment = async (postId) => {
     if (!commentText[postId] || !commentText[postId].trim()) {
       Swal.fire("⚠️ Warning", "Comment cannot be empty", "warning");
@@ -121,7 +112,6 @@ export default function AllPosts() {
     }
   };
 
-  // Edit Post or Comment
   const handleEdit = async (id, type, currentContent) => {
     const { value: content } = await Swal.fire({
       title: `Edit ${type === "post" ? "Post" : "Comment"}`,
@@ -149,7 +139,6 @@ export default function AllPosts() {
     }
   };
 
-  // Delete Post or Comment
   const handleDelete = async (id, type) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -178,17 +167,16 @@ export default function AllPosts() {
   };
 
   return (
-    <div className="p-8 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 min-h-screen space-y-6">
+    <div className="p-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen space-y-6">
       {/* Top Bar */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">🌍 Posts</h2>
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <h2 className="text-3xl font-extrabold text-gray-800">🌍 Posts</h2>
 
-        {/* Filter + Add Post */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="border border-gray-400 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-300 focus:outline-none"
+            className="border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-300 focus:outline-none"
           >
             <option value="all">All Posts</option>
             <option value="admin">Admin Posts</option>
@@ -197,7 +185,7 @@ export default function AllPosts() {
 
           <button
             onClick={handleAddPost}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl flex items-center gap-2 transition-all shadow-md hover:shadow-lg"
           >
             <Plus size={16} /> Add Post
           </button>
@@ -207,18 +195,18 @@ export default function AllPosts() {
       {/* Posts */}
       <div className="space-y-6">
         {posts.length === 0 ? (
-          <p className="text-center text-gray-500 italic">No posts yet.</p>
+          <p className="text-center text-gray-400 italic">No posts yet.</p>
         ) : (
           posts.map((post) => (
             <div
               key={post.id}
-              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100"
+              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-1 border border-gray-100"
             >
               {/* Post Header */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`p-3 rounded-full ${
+                    className={`flex items-center justify-center w-10 h-10 rounded-full ${
                       post.author_type === "admin"
                         ? "bg-purple-100 text-purple-600"
                         : "bg-blue-100 text-blue-600"
@@ -227,7 +215,7 @@ export default function AllPosts() {
                     {post.author_type === "admin" ? <Shield size={20} /> : <User size={20} />}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{post.title}</h3>
+                    <h3 className="font-bold text-lg text-gray-800">{post.title}</h3>
                     <p className="text-sm text-gray-500">
                       {post.author_type === "admin"
                         ? "🛡️ Admin"
@@ -235,6 +223,7 @@ export default function AllPosts() {
                     </p>
                   </div>
                 </div>
+
                 {filter === "my" && (
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -249,30 +238,30 @@ export default function AllPosts() {
               </div>
 
               {/* Post Content */}
-              <p className="text-gray-700 leading-relaxed mb-4 border-l-4 border-gray-200 pl-4">
+              <p className="text-gray-700 leading-relaxed mb-4 border-l-4 border-blue-200 pl-4">
                 {post.content}
               </p>
 
-              {/* Edit/Delete Post */}
-              {post.author_name === currentStudent.name && (
+              {/* Actions */}
+              {post.author_name === currentStudent?.name && (
                 <div className="flex gap-3 mb-3">
                   <button
                     onClick={() => handleEdit(post.id, "post", post.content)}
-                    className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+                    className="text-blue-600 hover:underline flex items-center gap-1 text-sm"
                   >
                     <Edit2 size={14} /> Edit
                   </button>
                   <button
                     onClick={() => handleDelete(post.id, "post")}
-                    className="text-red-600 hover:underline text-sm flex items-center gap-1"
+                    className="text-red-600 hover:underline flex items-center gap-1 text-sm"
                   >
                     <Trash2 size={14} /> Delete
                   </button>
                 </div>
               )}
 
-              {/* Comments Section */}
-              <div className="bg-gray-50 p-4 rounded-xl">
+              {/* Comments */}
+              <div className="bg-gray-50 p-4 rounded-xl space-y-3">
                 <div className="flex items-center gap-2 mb-2">
                   <MessageSquare size={18} className="text-gray-600" />
                   <h4 className="font-semibold text-gray-700">Comments</h4>
@@ -321,7 +310,7 @@ export default function AllPosts() {
                 )}
 
                 {/* Add Comment */}
-                <div className="flex gap-2 mt-4">
+                <div className="flex gap-2 mt-3">
                   <input
                     type="text"
                     placeholder="Add a comment..."
@@ -333,7 +322,7 @@ export default function AllPosts() {
                   />
                   <button
                     onClick={() => handleAddComment(post.id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-md hover:shadow-lg"
                   >
                     <Send size={16} /> Comment
                   </button>

@@ -10,6 +10,7 @@ import {
   Search,
   FileDown,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AdminAllPost() {
   const [items, setItems] = useState([]);
@@ -20,7 +21,6 @@ export default function AdminAllPost() {
   const [statusFilter, setStatusFilter] = useState("approved");
   const navigate = useNavigate();
 
-  // Fetch posts + comments
   const fetchItems = async () => {
     try {
       const postsEndpoint =
@@ -54,8 +54,7 @@ export default function AdminAllPost() {
       }
 
       combined.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
       setItems(combined);
       setFilteredItems(combined);
@@ -68,42 +67,39 @@ export default function AdminAllPost() {
     fetchItems();
   }, [typeFilter, statusFilter]);
 
-  // Search filter
   useEffect(() => {
     const term = searchTerm.toLowerCase();
-    const filtered = items.filter(
-      (item) =>
-        item.author_name?.toLowerCase().includes(term) ||
-        item.title?.toLowerCase().includes(term) ||
-        item.content?.toLowerCase().includes(term) ||
-        item.author_email?.toLowerCase().includes(term)
+    setFilteredItems(
+      items.filter(
+        (i) =>
+          i.author_name?.toLowerCase().includes(term) ||
+          i.title?.toLowerCase().includes(term) ||
+          i.content?.toLowerCase().includes(term)
+      )
     );
-    setFilteredItems(filtered);
   }, [searchTerm, items]);
 
-  // Selection logic
   const handleSelect = (id) => {
     setSelectedItems((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
+
   const handleSelectAll = () => {
     if (selectedItems.length === filteredItems.length) setSelectedItems([]);
     else setSelectedItems(filteredItems.map((i) => i.id));
   };
 
-  // Bulk Delete
   const handleDeleteSelected = async () => {
     if (selectedItems.length === 0)
       return Swal.fire("Info", "Select at least one item", "info");
 
     const confirm = await Swal.fire({
       title: "Delete Selected?",
-      text: `Are you sure you want to delete ${selectedItems.length} selected items?`,
+      text: `Are you sure you want to delete ${selectedItems.length} items?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, delete",
-      confirmButtonColor: "#d33",
     });
     if (!confirm.isConfirmed) return;
 
@@ -112,7 +108,10 @@ export default function AdminAllPost() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, type: typeFilter === "all" ? "post" : typeFilter }),
+        body: JSON.stringify({
+          id,
+          type: typeFilter === "all" ? "post" : typeFilter,
+        }),
       });
     }
 
@@ -121,7 +120,6 @@ export default function AdminAllPost() {
     fetchItems();
   };
 
-  // Export CSV
   const handleExportSelected = () => {
     if (selectedItems.length === 0)
       return Swal.fire("Info", "Select at least one item", "info");
@@ -130,12 +128,12 @@ export default function AdminAllPost() {
       selectedItems.includes(i.id)
     );
     const csv = [
-      "ID,Type,Title,Author,Email,Status,Created_At",
+      "ID,Type,Title,Author,Status,Created_At",
       ...exportData.map(
         (i) =>
           `${i.id},${i.type},${i.title || "-"},${i.author_name || "-"},${
-            i.author_email || "-"
-          },${i.status},${i.created_at}`
+            i.status
+          },${i.created_at}`
       ),
     ].join("\n");
 
@@ -147,7 +145,6 @@ export default function AdminAllPost() {
     Swal.fire("Exported!", "CSV downloaded successfully.", "success");
   };
 
-  // Approve/Edit/Delete (single)
   const handleApprove = async (id, type) => {
     const res = await fetch("http://localhost/college_api/approve.php", {
       method: "POST",
@@ -156,104 +153,89 @@ export default function AdminAllPost() {
       body: JSON.stringify({ id, type }),
     });
     const data = await res.json();
-    if (data.success) Swal.fire("✅ Approved", "", "success");
-    else Swal.fire("❌ Error", data.message, "error");
+    data.success
+      ? Swal.fire("✅ Approved", "", "success")
+      : Swal.fire("❌ Error", data.message, "error");
     fetchItems();
   };
 
   const handleDelete = async (id, type) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
-      text: `Delete this ${type}? This action cannot be undone.`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Yes, delete",
+      confirmButtonText: "Delete",
     });
     if (!confirm.isConfirmed) return;
-    const res = await fetch("http://localhost/college_api/delete.php", {
+
+    await fetch("http://localhost/college_api/delete.php", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, type }),
     });
-    const data = await res.json();
-    if (data.success) Swal.fire("🗑️ Deleted", "", "success");
-    else Swal.fire("❌ Error", data.message, "error");
+    Swal.fire("Deleted!", "", "success");
     fetchItems();
   };
 
-  const handleEdit = async (id, type, currentContent) => {
+  const handleEdit = async (id, type, content) => {
     const { value } = await Swal.fire({
       title: `Edit ${type}`,
       input: "textarea",
-      inputValue: currentContent,
+      inputValue: content,
       showCancelButton: true,
-      confirmButtonText: "Save",
     });
     if (!value) return;
-    const res = await fetch("http://localhost/college_api/edit.php", {
+    await fetch("http://localhost/college_api/edit.php", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, type, content: value }),
     });
-    const data = await res.json();
-    if (data.success) Swal.fire("✏️ Updated", "", "success");
-    else Swal.fire("❌ Error", data.message, "error");
+    Swal.fire("Updated!", "", "success");
     fetchItems();
   };
 
-  // Add Post
   const handleAddPost = async () => {
     const { value: formValues } = await Swal.fire({
       title: "Add New Post",
       html: `
-        <input type="text" id="title" class="swal2-input" placeholder="Title">
+        <input id="title" class="swal2-input" placeholder="Title">
         <textarea id="content" class="swal2-textarea" placeholder="Content"></textarea>
       `,
-      showCancelButton: true,
-      confirmButtonText: "Add Post",
       preConfirm: () => {
         const title = Swal.getPopup().querySelector("#title").value;
         const content = Swal.getPopup().querySelector("#content").value;
         if (!title || !content)
-          Swal.showValidationMessage("Both title and content are required");
+          Swal.showValidationMessage("Title and content required");
         return { title, content };
       },
     });
 
     if (formValues) {
-      try {
-        const res = await fetch("http://localhost/college_api/add_post.php", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formValues),
-        });
-        const data = await res.json();
-        if (data.success)
-          Swal.fire("✅ Added", "Post added successfully", "success");
-        else Swal.fire("❌ Error", data.message, "error");
-        fetchItems();
-      } catch {
-        Swal.fire("❌ Error", "Something went wrong", "error");
-      }
+      await fetch("http://localhost/college_api/add_post.php", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formValues),
+      });
+      Swal.fire("Added!", "", "success");
+      fetchItems();
     }
   };
 
   return (
-    <div className="p-8 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 min-h-screen rounded-2xl">
-      {/* Header and controls */}
+    <div className="p-6 min-h-screen ">
+      {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-        <h1 className="text-3xl font-extrabold text-gray-800 drop-shadow-sm">
+        <h1 className="text-3xl font-extrabold text-gray-800">
           📰 Manage Posts & Comments
         </h1>
-
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-400 rounded-xl bg-white shadow-sm"
+            className="px-3 py-2 border rounded-lg shadow bg-white"
           >
             <option value="post">Posts</option>
             <option value="comment">Comments</option>
@@ -262,35 +244,37 @@ export default function AdminAllPost() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-400 rounded-xl bg-white shadow-sm"
+            className="px-3 py-2 border rounded-lg shadow bg-white"
           >
             <option value="approved">Approved</option>
             <option value="pending">Pending</option>
           </select>
-
-          <div className="flex items-center bg-white border border-gray-300 rounded-xl px-3 py-1 shadow-sm">
-            <Search className="text-gray-500" size={18} />
+          <div className="flex items-center bg-white px-3 py-2 rounded-lg shadow border">
+            <Search size={18} className="text-gray-500" />
             <input
               type="text"
-              placeholder="Search name, title, content..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="outline-none px-2 py-1 bg-transparent"
+              className="ml-2 outline-none bg-transparent"
             />
           </div>
-
           <button
             onClick={handleAddPost}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 shadow-md"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md"
           >
             <Plus size={16} /> Add Post
           </button>
         </div>
       </div>
 
-      {/* Selected actions */}
+      {/* Bulk actions */}
       {selectedItems.length > 0 && (
-        <div className="flex gap-3 mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex gap-3 mb-4"
+        >
           <button
             onClick={handleDeleteSelected}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500 shadow-md"
@@ -303,114 +287,130 @@ export default function AdminAllPost() {
           >
             <FileDown size={16} /> Export Selected
           </button>
-        </div>
+        </motion.div>
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto bg-white rounded-xl shadow-xl border border-gray-200">
-        <table className="min-w-full text-left">
-          <thead className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
-            <tr>
-              <th className="px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={
-                    selectedItems.length === filteredItems.length &&
-                    filteredItems.length > 0
-                  }
-                  onChange={handleSelectAll}
-                />
-              </th>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Title / Type</th>
-              <th className="px-4 py-3">Content</th>
-              <th className="px-4 py-3">Author</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredItems.map((item) => (
-              <tr
-                key={`${item.type}-${item.id}`}
-                className={`border-t border-t-gray-300 hover:bg-indigo-50 transition ${
-                  selectedItems.includes(item.id) ? "bg-indigo-100" : ""
-                }`}
-              >
-                <td className="px-4 py-2">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
+      >
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left border-collapse">
+            <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white sticky top-0">
+              <tr>
+                <th className="px-4 py-3">
                   <input
                     type="checkbox"
-                    checked={selectedItems.includes(item.id)}
-                    onChange={() => handleSelect(item.id)}
+                    checked={
+                      selectedItems.length === filteredItems.length &&
+                      filteredItems.length > 0
+                    }
+                    onChange={handleSelectAll}
                   />
-                </td>
-                <td className="px-4 py-2 font-semibold">{item.id}</td>
-                <td className="px-4 py-2">
-                  {item.type === "post" ? (
-                    <span className="font-semibold text-indigo-700">
-                      {item.title}
-                    </span> 
-                  ) : (
-                    <span className="text-gray-500 italic">💬 Comment</span>
-                  )}
-                </td>
-                <td className="px-4 py-2 max-w-xs truncate text-gray-700">
-                  {item.content}
-                </td>
-                <td className="px-4 py-2 text-gray-700">{item.author_name}</td>
-                <td className="px-4 py-2">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      item.status === "approved"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </td>
-                <td className="px-4 py-2 flex gap-2 justify-center">
-                  {item.status === "pending" && (
-                    <button
-                      onClick={() => handleApprove(item.id, item.type)}
-                      className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-500"
-                    >
-                      <CheckCircle size={16} />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleEdit(item.id, item.type, item.content)}
-                    className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-400"
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id, item.type)}
-                    className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-500"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                  {item.type === "post" && (
-                    <button
-                      onClick={() => navigate(`/adminpanel/post/${item.id}`)}
-                      className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-500"
-                    >
-                      <Eye size={16} />
-                    </button>
-                  )}
-                </td>
+                </th>
+                <th className="px-4 py-3 font-semibold">ID</th>
+                <th className="px-4 py-3 font-semibold">Title / Type</th>
+                <th className="px-4 py-3 font-semibold">Content</th>
+                <th className="px-4 py-3 font-semibold">Author</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 text-center font-semibold">Actions</th>
               </tr>
-            ))}
-            {filteredItems.length === 0 && (
-              <tr>
-                <td colSpan="7" className="text-center py-6 text-gray-500 italic">
-                  No items found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filteredItems.map((item, i) => (
+                <motion.tr
+                  key={item.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className={`transition-all hover:bg-indigo-50 ${
+                    i % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  } ${selectedItems.includes(item.id) ? "bg-indigo-100" : ""}`}
+                >
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.includes(item.id)}
+                      onChange={() => handleSelect(item.id)}
+                    />
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-gray-700">
+                    {item.id}
+                  </td>
+                  <td className="px-4 py-3">
+                    {item.type === "post" ? (
+                      <span className="font-semibold text-indigo-600">
+                        {item.title}
+                      </span>
+                    ) : (
+                      <span className="italic text-gray-500">💬 Comment</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-700 max-w-xs truncate">
+                    {item.content}
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {item.author_name || "-"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        item.status === "approved"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 flex justify-center gap-2">
+                    {item.status === "pending" && (
+                      <button
+                        onClick={() => handleApprove(item.id, item.type)}
+                        className="p-2 bg-green-600 text-white rounded hover:bg-green-500"
+                      >
+                        <CheckCircle size={16} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleEdit(item.id, item.type, item.content)}
+                      className="p-2 bg-yellow-500 text-white rounded hover:bg-yellow-400"
+                    >
+                      <Edit3 size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id, item.type)}
+                      className="p-2 bg-red-600 text-white rounded hover:bg-red-500"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    {item.type === "post" && (
+                      <button
+                        onClick={() => navigate(`/adminpanel/post/${item.id}`)}
+                        className="p-2 bg-indigo-600 text-white rounded hover:bg-indigo-500"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    )}
+                  </td>
+                </motion.tr>
+              ))}
+              {filteredItems.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="7"
+                    className="text-center py-10 text-gray-400 italic"
+                  >
+                    No posts or comments found 💤
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
     </div>
   );
 }

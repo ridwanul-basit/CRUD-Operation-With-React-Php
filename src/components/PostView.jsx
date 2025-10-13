@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { Edit3, Trash2, ArrowLeft, MessageSquarePlus } from "lucide-react";
+import {
+  Edit3,
+  Trash2,
+  ArrowLeft,
+  MessageSquarePlus,
+  UserCircle2,
+  Send,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function PostView() {
   const { postId } = useParams();
@@ -47,7 +55,6 @@ export default function PostView() {
       });
       const data = await res.json();
       if (data.success) {
-        Swal.fire("✅ Added", "Comment added successfully", "success");
         setNewComment("");
         fetchPost();
       } else {
@@ -76,9 +83,8 @@ export default function PostView() {
         body: JSON.stringify({ id, type: "comment", content: value }),
       });
       const data = await res.json();
-      if (data.success) Swal.fire("✏️ Updated", "Comment updated successfully", "success");
+      if (data.success) fetchPost();
       else Swal.fire("❌ Error", data.message, "error");
-      fetchPost();
     } catch (err) {
       console.error(err);
     }
@@ -102,9 +108,8 @@ export default function PostView() {
         body: JSON.stringify({ id, type: "comment" }),
       });
       const data = await res.json();
-      if (data.success) Swal.fire("🗑️ Deleted", "Comment deleted successfully", "success");
+      if (data.success) fetchPost();
       else Swal.fire("❌ Error", data.message, "error");
-      fetchPost();
     } catch (err) {
       console.error(err);
     }
@@ -112,94 +117,128 @@ export default function PostView() {
 
   if (!post)
     return (
-      <div className="flex items-center justify-center h-screen text-gray-500 text-lg">
+      <div className="flex items-center justify-center h-screen text-gray-500 text-lg animate-pulse">
         Loading post...
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100  p-6 md:p-10">
+    <div className="min-h-screen  py-10 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 transition mb-6"
+          className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 mb-6 transition"
         >
           <ArrowLeft size={18} /> Back
         </button>
 
         {/* Post Card */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 border border-gray-100 hover:shadow-2xl transition">
-          <h2 className="text-3xl font-bold mb-2 text-gray-800">{post.title}</h2>
-          <p className="text-gray-700 leading-relaxed mb-4">{post.content}</p>
-          <div className="flex justify-between text-sm text-gray-500 border-t border-t-gray-300 pt-3">
-            <span>
-              🧑‍💻 {post.author_name} ({post.author_type})
-            </span>
-            <span>{new Date(post.created_at).toLocaleString()}</span>
-          </div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-3xl shadow-2xl bg-white/60 backdrop-blur-lg border border-white/30"
+        >
+          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-100 via-transparent to-pink-100 opacity-70"></div>
+          <div className="relative p-8">
+            <h1 className="text-4xl font-extrabold mb-3 text-gray-900 leading-tight tracking-tight">
+              {post.title}
+            </h1>
+            <p className="text-gray-700 text-lg leading-relaxed mb-6 whitespace-pre-line">
+              {post.content}
+            </p>
 
-        {/* Comments Section */}
-        <div className="mt-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
-          <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
-            <MessageSquarePlus size={22} /> Comments
+            <div className="flex justify-between items-center text-sm text-gray-500 border-t pt-4">
+              <div className="flex items-center gap-2">
+                <UserCircle2 size={18} />
+                {post.author_name} ({post.author_type})
+              </div>
+              <span>{new Date(post.created_at).toLocaleString()}</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Comments */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-10 bg-white/70 backdrop-blur-md rounded-3xl shadow-xl p-6 border border-white/40"
+        >
+          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-900">
+            <MessageSquarePlus size={24} /> Comments
           </h3>
 
-          {comments.length === 0 ? (
-            <p className="text-gray-500 italic text-center py-6">
-              No comments yet. Be the first to share your thoughts 💬
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {comments.map((c) => (
-                <div
+          <AnimatePresence>
+            {comments.length === 0 ? (
+              <motion.p
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-gray-500 italic text-center py-6"
+              >
+                No comments yet — be the first to share your thoughts 💬
+              </motion.p>
+            ) : (
+              comments.map((c) => (
+                <motion.div
                   key={c.id}
-                  className="flex justify-between items-start bg-gray-50 rounded-xl p-3 hover:bg-gray-100 transition"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="group flex justify-between items-start bg-gray-50/60 hover:bg-white transition border border-gray-100 rounded-2xl p-4 mb-3 shadow-sm"
                 >
-                  <div>
-                    <div className="font-medium text-gray-800">
-                      {c.author_name}{" "}
-                      <span className="text-sm text-gray-500">({c.author_type})</span>
+                  <div className="flex gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-pink-400 flex items-center justify-center text-white font-bold">
+                      {c.author_name[0].toUpperCase()}
                     </div>
-                    <p className="text-gray-700 mt-1">{c.content}</p>
+                    <div>
+                      <div className="font-medium text-gray-800">
+                        {c.author_name}{" "}
+                        <span className="text-sm text-gray-500">({c.author_type})</span>
+                      </div>
+                      <p className="text-gray-700 mt-1 leading-relaxed">{c.content}</p>
+                    </div>
                   </div>
-                  <div className="flex gap-2 text-gray-500">
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
                     <button
                       onClick={() => handleEditComment(c.id, c.content)}
-                      className="hover:text-yellow-600 transition"
+                      className="text-yellow-500 hover:text-yellow-600"
                     >
-                      <Edit3 size={16} />
+                      <Edit3 size={18} />
                     </button>
                     <button
                       onClick={() => handleDeleteComment(c.id)}
-                      className="hover:text-red-600 transition"
+                      className="text-red-500 hover:text-red-600"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={18} />
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                </motion.div>
+              ))
+            )}
+          </AnimatePresence>
 
-          {/* Add Comment Input */}
-          <div className="mt-6 flex gap-3">
+          {/* Comment Input */}
+          <div className="sticky bottom-0 mt-8 bg-white/70 backdrop-blur-lg border border-gray-200 rounded-2xl flex items-center gap-3 px-4 py-3 shadow-lg">
             <input
               type="text"
-              placeholder="Write your comment..."
+              placeholder="Write a comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none"
+              className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400"
             />
             <button
               onClick={handleAddComment}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-medium transition transform hover:scale-105"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-medium transition flex items-center gap-1"
             >
-              Add
+              <Send size={16} /> Post
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

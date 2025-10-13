@@ -27,13 +27,19 @@ import StudentDocuments from '../components/StudentDocuments';
 import AllPosts from '../components/AllPosts';
 import AdminAllPost from '../components/AdminAllPost';
 import PostView from '../components/PostView';
+import SliderAdmin from '../components/SliderAdmin';
+import AboutAdmin from '../components/AboutAdmin';
+import PostSection from '../components/PostSection';
+import Middle from './Middle';
+import LandingAbout from '../components/LandingAbout';
+import AdminFooter from '../components/AdminFooter';
 
 // Create the router
 const Router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Root />,
-  },
+  // {
+  //   path: "/",
+  //   element: <Root />,
+  // },
   {
     path: "/adminpanel",
     element: (
@@ -84,6 +90,18 @@ const Router = createBrowserRouter([
         element: <AdminAllPost></AdminAllPost>,
       },
       {
+        path: "slider", // 
+        element: <SliderAdmin></SliderAdmin>,
+      },
+      {
+        path: "admin-about", // 
+        element: <AboutAdmin></AboutAdmin>
+      },
+      {
+        path: "admin-footer", // 
+        element: <AdminFooter></AdminFooter>
+      },
+      {
       path: "post/:postId",
       element: <PostView />
       },
@@ -106,34 +124,52 @@ const Router = createBrowserRouter([
     element: <LoginStudent />,
   },
   {
-    path: "/student-layout",
+    path: "/",
     element: (
-      <PrivateRouteStudent isAuth={true}>
-        {/* <StudentDashboard /> */}
-        <StudentLayout></StudentLayout>
-      </PrivateRouteStudent>
+      <Root />
+
+      // <PrivateRouteStudent isAuth={true}>
+      //   <StudentDashboard />
+      //   <StudentLayout></StudentLayout>
+      // </PrivateRouteStudent>
     ),
     children: [
       {
-        path: "", // default dashboard for 
-        element: <TotalStudentsCard></TotalStudentsCard>,
-      },
-      {
-        path: "student-dashboard", //  relative path
-        element: <StudentDashboard />,
-      },
-      {
-        path: "student-announcements", // relative path for admins page
-        element: <StudentAnnouncements></StudentAnnouncements>,
-      },
-       {
-        path: "student-documents", // relative path for admins page
-        element: <StudentDocuments></StudentDocuments>,
+        path: "", // relative path for admins page
+        element: <Middle></Middle>,
       },
       {
         path: "student-get-all-post", // relative path for admins page
         element: <AllPosts></AllPosts>,
       },
+      {
+        path: "about", // relative path for admins page
+        element: <LandingAbout></LandingAbout>,
+      },
+      {
+        path: "student-layout", // relative path for admins page
+        element: <StudentDashboard></StudentDashboard>,
+      },
+      // {
+      //   path: "", // default dashboard for 
+      //   element: <TotalStudentsCard></TotalStudentsCard>,
+      // },
+      // {
+      //   path: "student-dashboard", //  relative path
+      //   element: <StudentDashboard />,
+      // },
+      // {
+      //   path: "student-announcements", // relative path for admins page
+      //   element: <StudentAnnouncements></StudentAnnouncements>,
+      // },
+      //  {
+      //   path: "student-documents", // relative path for admins page
+      //   element: <StudentDocuments></StudentDocuments>,
+      // },
+      // {
+      //   path: "student-get-all-post", // relative path for admins page
+      //   element: <AllPosts></AllPosts>,
+      // },
       
     ],
   },
@@ -149,6 +185,14 @@ const Router = createBrowserRouter([
     path: "/verify-email",
     element: <VerifyEmail />,
   },
+  // {
+  //   path: "/posts-random",
+  //   element: <PostSection></PostSection>,
+  // },
+  // {
+  //       path: "student-get-all-post", // relative path for admins page
+  //       element: <AllPosts></AllPosts>,
+  //     },
 ]);
 
 export default Router;
