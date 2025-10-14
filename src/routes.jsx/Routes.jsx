@@ -132,7 +132,7 @@ const Router = createBrowserRouter([
       //   <StudentDashboard />
       //   <StudentLayout></StudentLayout>
       // </PrivateRouteStudent>
-    ),
+    ), 
     children: [
       {
         path: "", // relative path for admins page
@@ -148,8 +148,11 @@ const Router = createBrowserRouter([
       },
       {
         path: "student-layout", // relative path for admins page
-        element: <StudentDashboard></StudentDashboard>,
-      },
+        element: 
+        <PrivateRouteStudent isAuth={true}>
+             <StudentDashboard></StudentDashboard>,
+        </PrivateRouteStudent>
+      }, 
       // {
       //   path: "", // default dashboard for 
       //   element: <TotalStudentsCard></TotalStudentsCard>,

@@ -21,6 +21,7 @@ export default function AdminAllPost() {
   const [statusFilter, setStatusFilter] = useState("approved");
   const navigate = useNavigate();
 
+  // Fetch posts/comments
   const fetchItems = async () => {
     try {
       const postsEndpoint =
@@ -79,19 +80,20 @@ export default function AdminAllPost() {
     );
   }, [searchTerm, items]);
 
+  // Select / deselect
   const handleSelect = (id) => {
     setSelectedItems((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
-
   const handleSelectAll = () => {
     if (selectedItems.length === filteredItems.length) setSelectedItems([]);
     else setSelectedItems(filteredItems.map((i) => i.id));
   };
 
+  // Bulk Delete
   const handleDeleteSelected = async () => {
-    if (selectedItems.length === 0)
+    if (!selectedItems.length)
       return Swal.fire("Info", "Select at least one item", "info");
 
     const confirm = await Swal.fire({
@@ -120,8 +122,9 @@ export default function AdminAllPost() {
     fetchItems();
   };
 
+  // Bulk Export
   const handleExportSelected = () => {
-    if (selectedItems.length === 0)
+    if (!selectedItems.length)
       return Swal.fire("Info", "Select at least one item", "info");
 
     const exportData = filteredItems.filter((i) =>
@@ -145,6 +148,7 @@ export default function AdminAllPost() {
     Swal.fire("Exported!", "CSV downloaded successfully.", "success");
   };
 
+  // Approve
   const handleApprove = async (id, type) => {
     const res = await fetch("http://localhost/college_api/approve.php", {
       method: "POST",
@@ -159,6 +163,7 @@ export default function AdminAllPost() {
     fetchItems();
   };
 
+  // Delete single
   const handleDelete = async (id, type) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -178,46 +183,86 @@ export default function AdminAllPost() {
     fetchItems();
   };
 
-  const handleEdit = async (id, type, content) => {
-    const { value } = await Swal.fire({
-      title: `Edit ${type}`,
-      input: "textarea",
-      inputValue: content,
-      showCancelButton: true,
+  // Edit post/comment
+  const handleEdit = async (item) => {
+    const { value: formValues } = await Swal.fire({
+      title: `Edit ${item.type}`,
+      html: `
+        <input id="title" class="swal2-input" placeholder="Title" value="${item.title || ''}" ${item.type === 'comment' ? 'disabled' : ''}>
+        <textarea id="content" class="swal2-textarea" placeholder="Content">${item.content}</textarea>
+        ${item.type === 'post' ? `<input id="image" type="file" class="swal2-file"><br>
+          ${item.image ? `<img src="${item.image}" class="mt-2 w-32 h-32 object-cover rounded-md" />` : ''}` : ''}
+      `,
+      focusConfirm: false,
+      preConfirm: () => {
+        const content = Swal.getPopup().querySelector("#content").value;
+        let image = null;
+        if (item.type === "post") {
+          image = Swal.getPopup().querySelector("#image").files[0] || null;
+        }
+        return { content, image };
+      },
     });
-    if (!value) return;
-    await fetch("http://localhost/college_api/edit.php", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, type, content: value }),
-    });
-    Swal.fire("Updated!", "", "success");
-    fetchItems();
+
+    if (formValues) {
+      const formData = new FormData();
+      formData.append("id", item.id);
+      formData.append("type", item.type);
+      formData.append("content", formValues.content);
+      if (formValues.image) formData.append("image", formValues.image);
+
+      const res = await fetch("http://localhost/college_api/edit.php", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        Swal.fire("Updated!", "", "success");
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === item.id
+              ? { ...i, content: formValues.content, image: data.image || i.image }
+              : i
+          )
+        );
+      } else {
+        Swal.fire("Error", data.message, "error");
+      }
+    }
   };
 
+  // Add new post
   const handleAddPost = async () => {
     const { value: formValues } = await Swal.fire({
       title: "Add New Post",
       html: `
         <input id="title" class="swal2-input" placeholder="Title">
         <textarea id="content" class="swal2-textarea" placeholder="Content"></textarea>
+        <input id="image" type="file" class="swal2-file">
       `,
+      focusConfirm: false,
       preConfirm: () => {
         const title = Swal.getPopup().querySelector("#title").value;
         const content = Swal.getPopup().querySelector("#content").value;
+        const image = Swal.getPopup().querySelector("#image").files[0];
         if (!title || !content)
           Swal.showValidationMessage("Title and content required");
-        return { title, content };
+        return { title, content, image };
       },
     });
 
     if (formValues) {
+      const formData = new FormData();
+      formData.append("title", formValues.title);
+      formData.append("content", formValues.content);
+      if (formValues.image) formData.append("image", formValues.image);
+
       await fetch("http://localhost/college_api/add_post.php", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formValues),
+        body: formData,
       });
       Swal.fire("Added!", "", "success");
       fetchItems();
@@ -225,7 +270,7 @@ export default function AdminAllPost() {
   };
 
   return (
-    <div className="p-6 min-h-screen ">
+    <div className="p-6 min-h-screen">
       {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <h1 className="text-3xl font-extrabold text-gray-800">
@@ -312,6 +357,7 @@ export default function AdminAllPost() {
                 </th>
                 <th className="px-4 py-3 font-semibold">ID</th>
                 <th className="px-4 py-3 font-semibold">Title / Type</th>
+                <th className="px-4 py-3 font-semibold">Image</th>
                 <th className="px-4 py-3 font-semibold">Content</th>
                 <th className="px-4 py-3 font-semibold">Author</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
@@ -348,6 +394,17 @@ export default function AdminAllPost() {
                       <span className="italic text-gray-500">💬 Comment</span>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt="post"
+                        className="w-16 h-16 object-cover rounded-md"
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-700 max-w-xs truncate">
                     {item.content}
                   </td>
@@ -375,7 +432,7 @@ export default function AdminAllPost() {
                       </button>
                     )}
                     <button
-                      onClick={() => handleEdit(item.id, item.type, item.content)}
+                      onClick={() => handleEdit(item)}
                       className="p-2 bg-yellow-500 text-white rounded hover:bg-yellow-400"
                     >
                       <Edit3 size={16} />
@@ -399,10 +456,7 @@ export default function AdminAllPost() {
               ))}
               {filteredItems.length === 0 && (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="text-center py-10 text-gray-400 italic"
-                  >
+                  <td colSpan="8" className="text-center py-10 text-gray-400 italic">
                     No posts or comments found 💤
                   </td>
                 </tr>

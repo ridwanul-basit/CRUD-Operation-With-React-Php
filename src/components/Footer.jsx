@@ -44,7 +44,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="footer sm:footer-horizontal bg-base-300 text-base-content px-10 py-24">
+    <footer className="footer sm:footer-horizontal bg-base-200 text-base-content px-10 py-24">
       {/* Services */}
       <nav>
         <h6 className="footer-title">Services</h6>

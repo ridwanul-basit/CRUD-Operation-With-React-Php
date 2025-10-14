@@ -32,7 +32,7 @@ export default function LandingSlider() {
   if (!slides.length) return null;
 
   return (
-    <div className="relative w-full h-96 md:h-[500px] overflow-hidden rounded-xl shadow-lg">
+    <div className="relative w-full h-96 md:h-[500px] overflow-hidden  shadow-lg">
       <AnimatePresence>
         {slides.map((slide, index) =>
           index === current ? (

@@ -187,7 +187,10 @@ export default function AdminLayout() {
                         animate={{ opacity: 1, height: "auto" }}
                         transition={{ duration: 0.25 }}
                         className="ml-6 mt-1 flex flex-col space-y-1"
-                      >
+                      > 
+                      <NavLink to="admin-all-posts" className={linkClass}>
+                          <User size={18} /> {!collapsed.main && "Posts"}
+                        </NavLink>
                         <NavLink to="slider" className={linkClass}>
                           <User size={18} /> {!collapsed.main && "Slider"}
                         </NavLink>
